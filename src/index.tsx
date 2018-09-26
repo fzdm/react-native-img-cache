@@ -53,7 +53,7 @@ export class ImageCache {
 
     private cache: { [uri: string]: CacheEntry } = {};
 
-    clear(cachedir string) {
+    clear(cachedir: string) {
           if (cachedir){
               BASE_DIR = cachedir
           }
@@ -220,8 +220,9 @@ export abstract class BaseCachedImage<P extends CachedImageProps> extends Compon
     componentWillReceiveProps(nextProps: P) {
         const {mutable} = nextProps;
         const source = this.checkSource(nextProps.source);
+        const {cachedir} = nextProps;
         if (typeof(source) !== "number" && source.uri) {
-            this.observe(source as CachedImageURISource, mutable === true);
+            this.observe(source as CachedImageURISource, cachedir, mutable === true);
         }
     }
 

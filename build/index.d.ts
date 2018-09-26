@@ -10,7 +10,7 @@ export declare class ImageCache {
     private constructor();
     static get(): ImageCache;
     private cache;
-    clear(cachedir: any, string: any): any;
+    clear(cachedir: string): any;
     on(source: CachedImageURISource, handler: CacheHandler, cachedir: string, immutable?: boolean): void;
     dispose(uri: string, handler: CacheHandler): void;
     bust(uri: string): void;

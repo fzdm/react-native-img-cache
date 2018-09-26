@@ -32,7 +32,7 @@ export class ImageCache {
         }
         return ImageCache.instance;
     }
-    clear(cachedir, string) {
+    clear(cachedir) {
         if (cachedir) {
             BASE_DIR = cachedir;
         }
@@ -173,8 +173,9 @@ export class BaseCachedImage extends Component {
     componentWillReceiveProps(nextProps) {
         const { mutable } = nextProps;
         const source = this.checkSource(nextProps.source);
+        const { cachedir } = nextProps;
         if (typeof (source) !== "number" && source.uri) {
-            this.observe(source, mutable === true);
+            this.observe(source, cachedir, mutable === true);
         }
     }
     componentWillUnmount() {
