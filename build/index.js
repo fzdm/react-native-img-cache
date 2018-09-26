@@ -2,19 +2,22 @@ import React, { Component } from "react";
 import { Image, ImageBackground, Platform } from "react-native";
 import RNFetchBlob from "rn-fetch-blob";
 const SHA1 = require("crypto-js/sha1");
+let BASE_DIR = RNFetchBlob.fs.dirs.CacheDir + "/react-native-img-cache";
 const s4 = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
-const BASE_DIR = RNFetchBlob.fs.dirs.CacheDir + "/react-native-img-cache";
 const FILE_PREFIX = Platform.OS === "ios" ? "" : "file://";
 export class ImageCache {
     constructor() {
         this.cache = {};
     }
-    getPath(uri, immutable) {
+    getPath(uri, cachedir, immutable) {
         let path = uri.substring(uri.lastIndexOf("/"));
         path = path.indexOf("?") === -1 ? path : path.substring(path.lastIndexOf("."), path.indexOf("?"));
         let ext = path.indexOf(".") === -1 ? ".jpg" : path.substring(path.indexOf("."));
         if (['.jpg', '.gif', '.jpeg', '.png'].indexOf(ext.toLowerCase()) == -1) { // ensure it's a valid extension 
             ext = '.jpg';
+        }
+        if (cachedir) {
+            BASE_DIR = cachedir;
         }
         if (immutable === true) {
             return BASE_DIR + "/" + SHA1(uri) + ext;
@@ -29,11 +32,14 @@ export class ImageCache {
         }
         return ImageCache.instance;
     }
-    clear() {
+    clear(cachedir, string) {
+        if (cachedir) {
+            BASE_DIR = cachedir;
+        }
         this.cache = {};
         return RNFetchBlob.fs.unlink(BASE_DIR);
     }
-    on(source, handler, immutable) {
+    on(source, handler, cachedir, immutable) {
         const { uri } = source;
         if (!this.cache[uri]) {
             this.cache[uri] = {
@@ -41,7 +47,7 @@ export class ImageCache {
                 downloading: false,
                 handlers: [handler],
                 immutable: immutable === true,
-                path: immutable === true ? this.getPath(uri, immutable) : undefined
+                path: immutable === true ? this.getPath(uri, cachedir, immutable) : undefined
             };
         }
         else {
@@ -75,8 +81,9 @@ export class ImageCache {
     download(cache) {
         const { source } = cache;
         const { uri } = source;
+        const { cachedir } = cache;
         if (!cache.downloading) {
-            const path = this.getPath(uri, cache.immutable);
+            const path = this.getPath(uri, cachedir, cache.immutable);
             cache.downloading = true;
             const method = source.method ? source.method : "GET";
             cache.task = RNFetchBlob.config({ path }).fetch(method, uri, source.headers);
@@ -127,11 +134,11 @@ export class BaseCachedImage extends Component {
             ImageCache.get().dispose(this.uri, this.handler);
         }
     }
-    observe(source, mutable) {
+    observe(source, cachedir, mutable) {
         if (source.uri !== this.uri) {
             this.dispose();
             this.uri = source.uri;
-            ImageCache.get().on(source, this.handler, !mutable);
+            ImageCache.get().on(source, this.handler, cachedir, !mutable);
         }
     }
     getProps() {
@@ -140,7 +147,7 @@ export class BaseCachedImage extends Component {
             if (prop === "source" && this.props.source.uri) {
                 props["source"] = this.state.path ? { uri: FILE_PREFIX + this.state.path } : {};
             }
-            else if (["mutable", "component"].indexOf(prop) === -1) {
+            else if (["mutable", "component", "cachedir"].indexOf(prop) === -1) {
                 props[prop] = this.props[prop];
             }
         });
@@ -157,9 +164,10 @@ export class BaseCachedImage extends Component {
     componentWillMount() {
         const { mutable } = this.props;
         const source = this.checkSource(this.props.source);
+        const { cachedir } = this.props;
         this.setState({ path: undefined });
         if (typeof (source) !== "number" && source.uri) {
-            this.observe(source, mutable === true);
+            this.observe(source, cachedir, mutable === true);
         }
     }
     componentWillReceiveProps(nextProps) {

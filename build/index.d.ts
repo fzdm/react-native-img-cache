@@ -10,8 +10,8 @@ export declare class ImageCache {
     private constructor();
     static get(): ImageCache;
     private cache;
-    clear(): any;
-    on(source: CachedImageURISource, handler: CacheHandler, immutable?: boolean): void;
+    clear(cachedir: any, string: any): any;
+    on(source: CachedImageURISource, handler: CacheHandler, cachedir: string, immutable?: boolean): void;
     dispose(uri: string, handler: CacheHandler): void;
     bust(uri: string): void;
     cancel(uri: string): void;
@@ -21,6 +21,7 @@ export declare class ImageCache {
 }
 export interface CachedImageProps extends ImageProperties {
     mutable?: boolean;
+    cachedir: string | undefined;
 }
 export interface CustomCachedImageProps extends CachedImageProps {
     component: new () => Component<any, any>;
@@ -40,11 +41,11 @@ export declare abstract class BaseCachedImage<P extends CachedImageProps> extend
     componentWillUnmount(): void;
 }
 export declare class CachedImage extends BaseCachedImage<CachedImageProps> {
-    render(): any;
+    render(): JSX.Element;
 }
 export declare class CachedImageBackground extends BaseCachedImage<CachedImageProps> {
-    render(): any;
+    render(): JSX.Element;
 }
 export declare class CustomCachedImage<P extends CustomCachedImageProps> extends BaseCachedImage<P> {
-    render(): any;
+    render(): JSX.Element;
 }
