@@ -1,6 +1,6 @@
 import { Component } from "react";
 import { ImageProperties, ImageURISource } from "react-native";
-export declare type CacheHandler = (path: string) => void;
+export declare type CacheHandler = (path: string | null) => void;
 export interface CachedImageURISource extends ImageURISource {
     uri: string;
 }
@@ -15,6 +15,7 @@ export declare class ImageCache {
     dispose(uri: string, handler: CacheHandler): void;
     bust(uri: string): void;
     cancel(uri: string): void;
+    preload(source: CachedImageURISource, cachedir: string, handler: CacheHandler, immutable?: boolean): void;
     private download;
     private get;
     private notify;
@@ -41,11 +42,11 @@ export declare abstract class BaseCachedImage<P extends CachedImageProps> extend
     componentWillUnmount(): void;
 }
 export declare class CachedImage extends BaseCachedImage<CachedImageProps> {
-    render(): JSX.Element;
+    render(): any;
 }
 export declare class CachedImageBackground extends BaseCachedImage<CachedImageProps> {
-    render(): JSX.Element;
+    render(): any;
 }
 export declare class CustomCachedImage<P extends CustomCachedImageProps> extends BaseCachedImage<P> {
-    render(): JSX.Element;
+    render(): any;
 }

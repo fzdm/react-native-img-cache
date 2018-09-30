@@ -78,6 +78,30 @@ export class ImageCache {
             cache.task.cancel();
         }
     }
+    preload(source, cachedir, handler, immutable) {
+        // Get stats of file (file exists, even if download failed, in case of a succesfull resolved request)
+        const handlerWrapper = (path) => {
+            if (path) {
+                RNFetchBlob.fs.stat(path)
+                    .then((stat) => {
+                    // Check if downloaded file is larger then 0 bytes
+                    if (stat && stat.size > 0) {
+                        handler(path);
+                    }
+                    else { // File downloaded, but without content
+                        handler(null);
+                    }
+                })
+                    .catch(() => {
+                    handler(null);
+                });
+            }
+            else {
+                handler(null);
+            }
+        };
+        this.on(source, handlerWrapper, cachedir, immutable);
+    }
     download(cache) {
         const { source } = cache;
         const { uri } = source;
@@ -90,7 +114,7 @@ export class ImageCache {
             cache.task.then(() => {
                 cache.downloading = false;
                 cache.path = path;
-                this.notify(uri);
+                this.notify(uri, true);
             }).catch(() => {
                 cache.downloading = false;
                 // Parts of the image may have been downloaded already, (see https://github.com/wkh237/react-native-fetch-blob/issues/331)
@@ -104,7 +128,7 @@ export class ImageCache {
             // We check here if IOS didn't delete the cache content
             RNFetchBlob.fs.exists(cache.path).then((exists) => {
                 if (exists) {
-                    this.notify(uri);
+                    this.notify(uri, true);
                 }
                 else {
                     this.download(cache);
@@ -115,10 +139,15 @@ export class ImageCache {
             this.download(cache);
         }
     }
-    notify(uri) {
+    notify(uri, success) {
         const handlers = this.cache[uri].handlers;
         handlers.forEach(handler => {
-            handler(this.cache[uri].path);
+            if (success) {
+                handler(this.cache[uri].path);
+            }
+            else { // Download failed
+                handler(null);
+            }
         });
     }
 }
